@@ -1,498 +1,806 @@
-
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>HUMAN v4.0 — Physiological Simulator</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
+:root {
+  --bg0: #000d00;
+  --bg1: #001200;
+  --bg2: #001a00;
+  --bg3: #002200;
+  --border: #004400;
+  --border2: #005500;
+  --g0: #003300;
+  --g1: #006600;
+  --g2: #009900;
+  --g3: #00cc00;
+  --g4: #00ff00;
+  --warn: #ffaa00;
+  --danger: #ff4444;
+  --info: #00aaff;
+  --font: 'Courier New', Courier, monospace;
+}
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:var(--font-mono,'Courier New',monospace);font-size:13px;background:var(--color-background-tertiary);color:var(--color-text-primary)}
-.screen{background:#001800;border:2px solid #00aa00;border-radius:4px;padding:0;overflow:hidden;min-height:600px}
-.titlebar{background:#003300;border-bottom:1px solid #00aa00;padding:6px 12px;display:flex;justify-content:space-between;align-items:center}
-.titlebar .title{color:#00ff00;font-size:14px;font-weight:500;letter-spacing:2px}
-.titlebar .subtitle{color:#009900;font-size:11px}
-.main{display:grid;grid-template-columns:220px 1fr;height:calc(100% - 36px)}
-.sidebar{background:#001200;border-right:1px solid #005500;padding:8px;overflow-y:auto;max-height:580px}
-.sidebar h3{color:#00cc00;font-size:11px;letter-spacing:1px;padding:4px 0 6px;border-bottom:1px solid #003300;margin-bottom:6px}
-.param-group{margin-bottom:10px}
-.param-group h4{color:#009900;font-size:10px;letter-spacing:1px;margin-bottom:4px;text-transform:uppercase}
-.param-row{display:flex;align-items:center;gap:4px;margin-bottom:3px}
-.param-row label{color:#00aa00;font-size:10px;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.param-row input[type=range]{width:70px;height:3px;accent-color:#00ff00;background:#002200;flex-shrink:0}
-.param-row .val{color:#00ff00;font-size:10px;min-width:32px;text-align:right;flex-shrink:0}
-.content{padding:8px;display:flex;flex-direction:column;gap:8px}
-.systems-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
-.sys-card{background:#001a00;border:1px solid #004400;border-radius:3px;padding:6px}
-.sys-card h4{color:#00cc00;font-size:10px;letter-spacing:1px;margin-bottom:6px;border-bottom:1px solid #003300;padding-bottom:3px}
-.var-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:2px}
-.var-row .vname{color:#009900;font-size:10px}
-.var-row .vval{font-size:10px;font-weight:500}
-.normal{color:#00ff00}
-.warning{color:#ffaa00}
-.danger{color:#ff4444}
-.chart-area{background:#001200;border:1px solid #004400;border-radius:3px;padding:6px}
-.chart-area h4{color:#00cc00;font-size:10px;letter-spacing:1px;margin-bottom:4px}
-.controls{display:flex;gap:6px;align-items:center;flex-wrap:wrap;padding:6px 8px;background:#001200;border-top:1px solid #005500}
-.btn{background:#002800;border:1px solid #00aa00;color:#00ff00;font-family:var(--font-mono,'Courier New',monospace);font-size:11px;padding:4px 10px;cursor:pointer;border-radius:2px;letter-spacing:1px}
-.btn:hover{background:#003800}
-.btn.active{background:#004400;border-color:#00ff00}
-.btn.danger-btn{border-color:#ff4444;color:#ff4444}
-.btn.danger-btn:hover{background:#280000}
-.status-bar{background:#000e00;border-top:1px solid #003300;padding:3px 8px;display:flex;gap:16px;font-size:10px}
-.status-bar span{color:#007700}
-.status-bar .sv{color:#00aa00}
-.preset-btns{display:flex;gap:4px;flex-wrap:wrap}
-.preset-btns .btn{font-size:10px;padding:3px 7px}
-canvas{display:block;width:100%;height:120px}
-.log-area{background:#000e00;border:1px solid #004400;border-radius:3px;padding:6px;max-height:80px;overflow-y:auto}
-.log-area p{color:#006600;font-size:10px;line-height:1.4}
-.log-area p.info{color:#00aa00}
-.log-area p.warn{color:#aa7700}
-.ticker{display:inline-block;animation:blink 1s step-end infinite;color:#00ff00}
-@keyframes blink{50%{opacity:0}}
+html,body{width:100%;height:100%;background:var(--bg0);color:var(--g2);font-family:var(--font);font-size:12px;overflow:hidden}
+/* ── LAYOUT ── */
+#app{display:flex;flex-direction:column;height:100vh;width:100vw;max-width:100vw;overflow:hidden}
+#titlebar{
+  display:flex;justify-content:space-between;align-items:center;
+  background:var(--bg2);border-bottom:1px solid var(--border2);
+  padding:4px 8px;flex-shrink:0;gap:4px;flex-wrap:wrap;
+}
+#titlebar .tl{color:var(--g4);font-size:13px;letter-spacing:2px;white-space:nowrap}
+#titlebar .tr{color:var(--g1);font-size:10px;white-space:nowrap}
+#titlebar .btns{display:flex;gap:4px;align-items:center}
+#body{display:flex;flex:1;min-height:0;overflow:hidden}
+/* ── SIDEBAR ── */
+#sidebar{
+  width:200px;min-width:200px;background:var(--bg1);
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;overflow:hidden;flex-shrink:0;
+}
+#sidebar-inner{flex:1;overflow-y:auto;padding:6px;scrollbar-width:thin;scrollbar-color:var(--g0) transparent}
+#sidebar-inner::-webkit-scrollbar{width:4px}
+#sidebar-inner::-webkit-scrollbar-track{background:transparent}
+#sidebar-inner::-webkit-scrollbar-thumb{background:var(--g0)}
+.sg-title{color:var(--g3);font-size:10px;letter-spacing:1px;padding:3px 0 5px;border-bottom:1px solid var(--border);margin-bottom:5px;text-transform:uppercase}
+.sg-sub{color:var(--g2);font-size:9px;letter-spacing:1px;text-transform:uppercase;margin:8px 0 3px;opacity:.8}
+.pr{display:flex;align-items:center;gap:3px;margin-bottom:2px}
+.pr label{color:var(--g2);font-size:9px;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;cursor:default}
+.pr input[type=range]{
+  width:52px;height:3px;flex-shrink:0;cursor:pointer;
+  accent-color:var(--g4);background:var(--g0);
+  -webkit-appearance:none;appearance:none;border-radius:2px;outline:none;
+}
+.pr input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:10px;height:10px;border-radius:50%;background:var(--g4);cursor:pointer}
+.pr .pv{color:var(--g4);font-size:9px;min-width:28px;text-align:right;flex-shrink:0}
+/* ── MAIN CONTENT ── */
+#main{flex:1;display:flex;flex-direction:column;min-width:0;overflow:hidden}
+#preset-bar{
+  display:flex;flex-wrap:wrap;gap:4px;align-items:center;
+  padding:5px 8px;background:var(--bg1);border-bottom:1px solid var(--border);
+  flex-shrink:0;
+}
+#preset-bar .plabel{color:var(--g1);font-size:9px;align-self:center;white-space:nowrap}
+#content{flex:1;display:flex;flex-direction:column;min-height:0;padding:6px;gap:5px;overflow:hidden}
+/* ── SYSTEMS GRID ── */
+#sys-grid{
+  display:grid;
+  grid-template-columns:repeat(3,1fr);
+  gap:5px;flex-shrink:0;
+}
+.sc{background:var(--bg2);border:1px solid var(--border);border-radius:2px;padding:5px 6px}
+.sc h4{color:var(--g3);font-size:9px;letter-spacing:1px;margin-bottom:4px;border-bottom:1px solid var(--border);padding-bottom:2px;text-transform:uppercase}
+.vr{display:flex;justify-content:space-between;align-items:center;margin-bottom:1px;gap:4px}
+.vr .vn{color:var(--g1);font-size:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1}
+.vr .vv{font-size:9px;font-weight:bold;white-space:nowrap;flex-shrink:0;min-width:40px;text-align:right}
+.ok{color:var(--g4)}.warn{color:var(--warn)}.bad{color:var(--danger)}
+/* ── CHART ── */
+#chart-wrap{
+  flex:1;min-height:0;
+  background:var(--bg1);border:1px solid var(--border);border-radius:2px;
+  display:flex;flex-direction:column;padding:5px 6px;overflow:hidden;
+}
+#chart-wrap h4{color:var(--g3);font-size:9px;letter-spacing:1px;margin-bottom:4px;flex-shrink:0}
+#chart-container{flex:1;min-height:0;position:relative}
+#trendChart{display:block}
+/* ── LOG ── */
+#log{
+  background:var(--bg0);border:1px solid var(--border);border-radius:2px;
+  padding:4px 6px;max-height:54px;min-height:36px;overflow-y:auto;flex-shrink:0;
+  scrollbar-width:thin;scrollbar-color:var(--g0) transparent;
+}
+#log::-webkit-scrollbar{width:3px}
+#log::-webkit-scrollbar-thumb{background:var(--g0)}
+.lp{font-size:9px;line-height:1.5;color:var(--g1)}
+.lp.li{color:var(--g3)}.lp.lw{color:var(--warn)}.lp.le{color:var(--danger)}
+/* ── STATUS BAR ── */
+#status{
+  display:flex;flex-wrap:wrap;gap:8px;align-items:center;
+  padding:2px 8px;background:var(--bg0);border-top:1px solid var(--border);
+  flex-shrink:0;
+}
+#status span{font-size:9px;color:var(--g1)}
+#status .sv{color:var(--g3)}
+/* ── BUTTONS ── */
+.btn{
+  background:var(--g0);border:1px solid var(--g2);color:var(--g4);
+  font-family:var(--font);font-size:10px;padding:3px 8px;
+  cursor:pointer;border-radius:1px;letter-spacing:.5px;
+  white-space:nowrap;flex-shrink:0;
+  transition:background .1s;
+}
+.btn:hover{background:var(--bg3);border-color:var(--g4)}
+.btn:active{background:var(--g0)}
+.btn.preset{font-size:9px;padding:2px 6px}
+.btn.icon-btn{
+  background:transparent;border:none;color:var(--g1);
+  font-size:13px;padding:2px 5px;letter-spacing:0;opacity:.7;
+}
+.btn.icon-btn:hover{background:transparent;border:none;color:var(--g3);opacity:1}
+/* ── MODAL ── */
+#modal-overlay{
+  display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);
+  z-index:1000;align-items:center;justify-content:center;padding:16px;
+}
+#modal-overlay.open{display:flex}
+#modal{
+  background:var(--bg2);border:1px solid var(--g2);border-radius:3px;
+  padding:16px;max-width:560px;width:100%;max-height:90vh;overflow-y:auto;
+  scrollbar-width:thin;scrollbar-color:var(--g0) transparent;
+}
+#modal h2{color:var(--g4);font-size:13px;letter-spacing:2px;margin-bottom:8px;border-bottom:1px solid var(--border);padding-bottom:6px}
+#modal h3{color:var(--g3);font-size:10px;letter-spacing:1px;margin:10px 0 5px;text-transform:uppercase}
+#modal p,#modal li{color:var(--g2);font-size:10px;line-height:1.7;margin-bottom:3px}
+#modal ul{padding-left:14px}
+#modal li{list-style:none}
+#modal li::before{content:"▸ ";color:var(--g3)}
+#modal .author{color:var(--g4);font-size:11px;margin-bottom:4px}
+#modal .modal-close{margin-top:14px;display:flex;justify-content:center}
+/* ── EXIT CONFIRM ── */
+#exit-overlay{
+  display:none;position:fixed;inset:0;background:rgba(0,0,0,.9);
+  z-index:1001;align-items:center;justify-content:center;
+}
+#exit-overlay.open{display:flex}
+#exit-box{
+  background:var(--bg2);border:1px solid var(--danger);border-radius:3px;
+  padding:20px 24px;text-align:center;
+}
+#exit-box p{color:var(--g3);font-size:11px;margin-bottom:14px}
+#exit-box .ebtns{display:flex;gap:10px;justify-content:center}
+/* ── RESPONSIVE ── */
+@media(max-width:900px){
+  #sys-grid{grid-template-columns:repeat(2,1fr)}
+}
+@media(max-width:700px){
+  #sidebar{width:160px;min-width:160px}
+  #sys-grid{grid-template-columns:repeat(2,1fr)}
+  #titlebar .tr{display:none}
+}
+@media(max-width:520px){
+  #body{flex-direction:column}
+  #sidebar{width:100%;min-width:0;max-height:180px;border-right:none;border-bottom:1px solid var(--border)}
+  #sidebar-inner{display:flex;flex-wrap:wrap;gap:0 12px;flex-direction:row;padding:5px 8px}
+  .sg-title{display:none}
+  .sg-sub{width:100%;margin:4px 0 2px}
+  #sys-grid{grid-template-columns:repeat(2,1fr)}
+  .sc h4{font-size:8px}
+  .vr .vn{font-size:8px}.vr .vv{font-size:8px}
+  .btn.preset{font-size:8px;padding:2px 4px}
+}
+@media(max-width:380px){
+  #sys-grid{grid-template-columns:1fr 1fr}
+  .sc{padding:3px 4px}
+}
 </style>
-
-<div class="screen">
-  <div class="titlebar">
-    <span class="title">HUMAN v4.0 — PHYSIOLOGICAL SIMULATOR</span>
-    <span class="subtitle">Coleman &amp; Randall — Univ. of Mississippi · Web Recreation</span>
+</head>
+<body>
+<div id="app">
+  <div id="titlebar">
+    <span class="tl">HUMAN v4.0 — PHYSIOLOGICAL SIMULATOR</span>
+    <div class="btns">
+      <button class="btn icon-btn" title="Acerca de" onclick="openAbout()">&#9432;</button>
+      <button class="btn icon-btn" title="Salir" onclick="openExit()">&#x23FB;</button>
+    </div>
+    <span class="tr">Coleman &amp; Randall — Univ. of Mississippi &nbsp;·&nbsp; Web Recreation</span>
   </div>
-  <div class="main">
-    <div class="sidebar">
-      <h3>⚙ PARAMETERS</h3>
-      <div class="param-group">
-        <h4>Environmental</h4>
-        <div class="param-row"><label title="Barometric pressure (mmHg)">Barometric P.</label><input type="range" id="baro" min="400" max="760" value="760"><span class="val" id="baro-v">760</span></div>
-        <div class="param-row"><label title="Ambient temperature (°C)">Ambient Temp.</label><input type="range" id="atemp" min="-10" max="50" value="22"><span class="val" id="atemp-v">22</span></div>
-        <div class="param-row"><label title="Humidity (%)">Humidity %</label><input type="range" id="humid" min="0" max="100" value="50"><span class="val" id="humid-v">50</span></div>
-      </div>
-      <div class="param-group">
-        <h4>Cardiovascular</h4>
-        <div class="param-row"><label title="Heart rate multiplier">Heart Rate ×</label><input type="range" id="hr_mult" min="40" max="200" value="100"><span class="val" id="hr_mult-v">1.0</span></div>
-        <div class="param-row"><label title="Peripheral vascular resistance">Vasc. Resist.</label><input type="range" id="pvr" min="20" max="200" value="100"><span class="val" id="pvr-v">1.0</span></div>
-        <div class="param-row"><label title="Cardiac contractility">Contractility</label><input type="range" id="contract" min="20" max="200" value="100"><span class="val" id="contract-v">1.0</span></div>
-        <div class="param-row"><label title="Blood volume (L)">Blood Volume</label><input type="range" id="bvol" min="2" max="8" value="5"><span class="val" id="bvol-v">5.0</span></div>
-        <div class="param-row"><label title="Shunt fraction (%)">Shunt (R→L)</label><input type="range" id="shunt" min="0" max="40" value="0"><span class="val" id="shunt-v">0</span></div>
-      </div>
-      <div class="param-group">
-        <h4>Respiratory</h4>
-        <div class="param-row"><label title="Inspired O2 fraction">FiO2 %</label><input type="range" id="fio2" min="10" max="100" value="21"><span class="val" id="fio2-v">21</span></div>
-        <div class="param-row"><label title="Lung diffusion capacity (% of normal)">Diffusion %</label><input type="range" id="diffuse" min="10" max="100" value="100"><span class="val" id="diffuse-v">100</span></div>
-        <div class="param-row"><label title="Airway resistance">Airway Res.</label><input type="range" id="airway" min="20" max="200" value="100"><span class="val" id="airway-v">1.0</span></div>
-        <div class="param-row"><label title="Metabolic rate (% of basal)">Metabolic %</label><input type="range" id="metab" min="50" max="600" value="100"><span class="val" id="metab-v">100</span></div>
-      </div>
-      <div class="param-group">
-        <h4>Renal</h4>
-        <div class="param-row"><label title="Functional nephrons (% of normal)">Nephrons %</label><input type="range" id="nephron" min="10" max="100" value="100"><span class="val" id="nephron-v">100</span></div>
-        <div class="param-row"><label title="Aldosterone level">Aldosterone</label><input type="range" id="aldos" min="10" max="500" value="100"><span class="val" id="aldos-v">1.0</span></div>
-        <div class="param-row"><label title="ADH level">ADH</label><input type="range" id="adh" min="10" max="500" value="100"><span class="val" id="adh-v">1.0</span></div>
-        <div class="param-row"><label title="Salt intake (mEq/day)">Salt Intake</label><input type="range" id="salt" min="0" max="400" value="150"><span class="val" id="salt-v">150</span></div>
-        <div class="param-row"><label title="Water intake (mL/day)">Water Intake</label><input type="range" id="water" min="500" max="5000" value="2000"><span class="val" id="water-v">2000</span></div>
-      </div>
-      <div class="param-group">
-        <h4>Hematology</h4>
-        <div class="param-row"><label title="Hematocrit (%)">Hematocrit</label><input type="range" id="hct" min="10" max="65" value="45"><span class="val" id="hct-v">45</span></div>
-        <div class="param-row"><label title="Hemoglobin O2 affinity (P50 mmHg)">Hgb O2 P50</label><input type="range" id="p50" min="15" max="40" value="27"><span class="val" id="p50-v">27</span></div>
-      </div>
-      <div class="param-group">
-        <h4>Thermoregulation</h4>
-        <div class="param-row"><label title="Set point temperature (°C)">Temp Setpoint</label><input type="range" id="setpt" min="35" max="41" value="37"><span class="val" id="setpt-v">37.0</span></div>
+
+  <div id="body">
+    <div id="sidebar">
+      <div id="sidebar-inner">
+        <div style="width:100%">
+          <div class="sg-title">⚙ PARAMETERS</div>
+        </div>
+
+        <div class="sg-sub" style="width:100%">Environmental</div>
+        <div class="pr"><label title="Presión barométrica (mmHg)">Barometric P.</label><input type="range" id="baro" min="400" max="760" value="760"><span class="pv" id="baro-v">760</span></div>
+        <div class="pr"><label title="Temperatura ambiente (°C)">Ambient Temp.</label><input type="range" id="atemp" min="-10" max="50" value="22"><span class="pv" id="atemp-v">22</span></div>
+        <div class="pr"><label title="Humedad relativa (%)">Humidity %</label><input type="range" id="humid" min="0" max="100" value="50"><span class="pv" id="humid-v">50</span></div>
+
+        <div class="sg-sub" style="width:100%">Cardiovascular</div>
+        <div class="pr"><label>Heart Rate ×</label><input type="range" id="hr_mult" min="40" max="200" value="100"><span class="pv" id="hr_mult-v">1.0</span></div>
+        <div class="pr"><label>Vasc. Resist.</label><input type="range" id="pvr" min="20" max="200" value="100"><span class="pv" id="pvr-v">1.0</span></div>
+        <div class="pr"><label>Contractility</label><input type="range" id="contract" min="20" max="200" value="100"><span class="pv" id="contract-v">1.0</span></div>
+        <div class="pr"><label>Blood Volume</label><input type="range" id="bvol" min="2" max="8" value="5" step="0.1"><span class="pv" id="bvol-v">5.0</span></div>
+        <div class="pr"><label>Shunt (R→L %)</label><input type="range" id="shunt" min="0" max="40" value="0"><span class="pv" id="shunt-v">0</span></div>
+
+        <div class="sg-sub" style="width:100%">Respiratory</div>
+        <div class="pr"><label>FiO₂ %</label><input type="range" id="fio2" min="10" max="100" value="21"><span class="pv" id="fio2-v">21</span></div>
+        <div class="pr"><label>Diffusion %</label><input type="range" id="diffuse" min="10" max="100" value="100"><span class="pv" id="diffuse-v">100</span></div>
+        <div class="pr"><label>Airway Res.</label><input type="range" id="airway" min="20" max="200" value="100"><span class="pv" id="airway-v">1.0</span></div>
+        <div class="pr"><label>Metabolic %</label><input type="range" id="metab" min="50" max="600" value="100"><span class="pv" id="metab-v">100</span></div>
+
+        <div class="sg-sub" style="width:100%">Renal</div>
+        <div class="pr"><label>Nephrons %</label><input type="range" id="nephron" min="10" max="100" value="100"><span class="pv" id="nephron-v">100</span></div>
+        <div class="pr"><label>Aldosterone</label><input type="range" id="aldos" min="10" max="500" value="100"><span class="pv" id="aldos-v">1.0</span></div>
+        <div class="pr"><label>ADH</label><input type="range" id="adh" min="10" max="500" value="100"><span class="pv" id="adh-v">1.0</span></div>
+        <div class="pr"><label>Salt Intake</label><input type="range" id="salt" min="0" max="400" value="150"><span class="pv" id="salt-v">150</span></div>
+        <div class="pr"><label>Water Intake</label><input type="range" id="water" min="500" max="5000" value="2000"><span class="pv" id="water-v">2000</span></div>
+
+        <div class="sg-sub" style="width:100%">Hematology</div>
+        <div class="pr"><label>Hematocrit %</label><input type="range" id="hct" min="10" max="65" value="45"><span class="pv" id="hct-v">45</span></div>
+        <div class="pr"><label>Hgb O₂ P50</label><input type="range" id="p50" min="15" max="40" value="27"><span class="pv" id="p50-v">27</span></div>
+
+        <div class="sg-sub" style="width:100%">Thermoregulation</div>
+        <div class="pr"><label>Temp Setpoint</label><input type="range" id="setpt" min="35" max="41" value="37" step="0.1"><span class="pv" id="setpt-v">37.0</span></div>
       </div>
     </div>
 
-    <div class="content">
-      <div class="preset-btns">
-        <span style="color:#009900;font-size:10px;align-self:center">PRESET: </span>
-        <button class="btn" onclick="applyPreset('normal')">NORMAL</button>
-        <button class="btn" onclick="applyPreset('altitude')">HIGH ALTITUDE</button>
-        <button class="btn" onclick="applyPreset('anemia')">ANEMIA</button>
-        <button class="btn" onclick="applyPreset('emphysema')">EMPHYSEMA</button>
-        <button class="btn" onclick="applyPreset('exercise')">EXERCISE</button>
-        <button class="btn" onclick="applyPreset('fever')">FEVER</button>
-        <button class="btn" onclick="applyPreset('hypertension')">HYPERTENSION</button>
-        <button class="btn" onclick="applyPreset('nephrectomy')">NEPHRECTOMY</button>
-        <button class="btn" onclick="applyPreset('shunt')">R→L SHUNT</button>
+    <div id="main">
+      <div id="preset-bar">
+        <span class="plabel">PRESET:</span>
+        <button class="btn preset" onclick="applyPreset('normal')">NORMAL</button>
+        <button class="btn preset" onclick="applyPreset('altitude')">HIGH ALTITUDE</button>
+        <button class="btn preset" onclick="applyPreset('anemia')">ANEMIA</button>
+        <button class="btn preset" onclick="applyPreset('emphysema')">EMPHYSEMA</button>
+        <button class="btn preset" onclick="applyPreset('exercise')">EXERCISE</button>
+        <button class="btn preset" onclick="applyPreset('fever')">FEVER</button>
+        <button class="btn preset" onclick="applyPreset('hypertension')">HYPERTENSION</button>
+        <button class="btn preset" onclick="applyPreset('nephrectomy')">NEPHRECTOMY</button>
+        <button class="btn preset" onclick="applyPreset('shunt')">R→L SHUNT</button>
       </div>
 
-      <div class="systems-grid">
-        <div class="sys-card">
-          <h4>♥ CARDIOVASCULAR</h4>
-          <div class="var-row"><span class="vname">Heart Rate (bpm)</span><span class="vval" id="o-hr">72</span></div>
-          <div class="var-row"><span class="vname">SBP (mmHg)</span><span class="vval" id="o-sbp">120</span></div>
-          <div class="var-row"><span class="vname">DBP (mmHg)</span><span class="vval" id="o-dbp">80</span></div>
-          <div class="var-row"><span class="vname">MAP (mmHg)</span><span class="vval" id="o-map">93</span></div>
-          <div class="var-row"><span class="vname">CO (L/min)</span><span class="vval" id="o-co">5.0</span></div>
-          <div class="var-row"><span class="vname">SVR (dyn·s/cm⁵)</span><span class="vval" id="o-svr">1200</span></div>
-          <div class="var-row"><span class="vname">CVP (mmHg)</span><span class="vval" id="o-cvp">5</span></div>
+      <div id="content">
+        <div id="sys-grid">
+          <div class="sc">
+            <h4>♥ CARDIOVASCULAR</h4>
+            <div class="vr"><span class="vn">Heart Rate (bpm)</span><span class="vv ok" id="o-hr">72</span></div>
+            <div class="vr"><span class="vn">SBP (mmHg)</span><span class="vv ok" id="o-sbp">120</span></div>
+            <div class="vr"><span class="vn">DBP (mmHg)</span><span class="vv ok" id="o-dbp">80</span></div>
+            <div class="vr"><span class="vn">MAP (mmHg)</span><span class="vv ok" id="o-map">93</span></div>
+            <div class="vr"><span class="vn">CO (L/min)</span><span class="vv ok" id="o-co">5.0</span></div>
+            <div class="vr"><span class="vn">SVR (dyn·s/cm⁵)</span><span class="vv ok" id="o-svr">1200</span></div>
+            <div class="vr"><span class="vn">CVP (mmHg)</span><span class="vv ok" id="o-cvp">5</span></div>
+          </div>
+          <div class="sc">
+            <h4>🫁 RESPIRATORY</h4>
+            <div class="vr"><span class="vn">RR (br/min)</span><span class="vv ok" id="o-rr">14</span></div>
+            <div class="vr"><span class="vn">Tidal Vol (mL)</span><span class="vv ok" id="o-tv">500</span></div>
+            <div class="vr"><span class="vn">MV (L/min)</span><span class="vv ok" id="o-mv">7.0</span></div>
+            <div class="vr"><span class="vn">PaO₂ (mmHg)</span><span class="vv ok" id="o-pao2">97</span></div>
+            <div class="vr"><span class="vn">PaCO₂ (mmHg)</span><span class="vv ok" id="o-paco2">40</span></div>
+            <div class="vr"><span class="vn">SaO₂ (%)</span><span class="vv ok" id="o-sao2">98</span></div>
+            <div class="vr"><span class="vn">V/Q ratio</span><span class="vv ok" id="o-vq">0.80</span></div>
+          </div>
+          <div class="sc">
+            <h4>⚖ ACID-BASE</h4>
+            <div class="vr"><span class="vn">pH arterial</span><span class="vv ok" id="o-ph">7.40</span></div>
+            <div class="vr"><span class="vn">HCO₃⁻ (mEq/L)</span><span class="vv ok" id="o-hco3">24</span></div>
+            <div class="vr"><span class="vn">BE (mEq/L)</span><span class="vv ok" id="o-be">0</span></div>
+            <div class="vr"><span class="vn">AG (mEq/L)</span><span class="vv ok" id="o-ag">12</span></div>
+            <div class="vr"><span class="vn">Lactate (mmol/L)</span><span class="vv ok" id="o-lact">1.0</span></div>
+            <div class="vr"><span class="vn">Status</span><span class="vv ok" id="o-abstat">Normal</span></div>
+          </div>
+          <div class="sc">
+            <h4>🫘 RENAL</h4>
+            <div class="vr"><span class="vn">GFR (mL/min)</span><span class="vv ok" id="o-gfr">120</span></div>
+            <div class="vr"><span class="vn">Urine flow (mL/h)</span><span class="vv ok" id="o-uflow">60</span></div>
+            <div class="vr"><span class="vn">UNa (mEq/L)</span><span class="vv ok" id="o-una">80</span></div>
+            <div class="vr"><span class="vn">Uosm (mOsm/kg)</span><span class="vv ok" id="o-uosm">600</span></div>
+            <div class="vr"><span class="vn">Creatinine (mg/dL)</span><span class="vv ok" id="o-creat">0.9</span></div>
+            <div class="vr"><span class="vn">BUN (mg/dL)</span><span class="vv ok" id="o-bun">15</span></div>
+          </div>
+          <div class="sc">
+            <h4>💧 FLUID BALANCE</h4>
+            <div class="vr"><span class="vn">Plasma Na (mEq/L)</span><span class="vv ok" id="o-pna">140</span></div>
+            <div class="vr"><span class="vn">Plasma K (mEq/L)</span><span class="vv ok" id="o-pk">4.0</span></div>
+            <div class="vr"><span class="vn">Plasma Osm</span><span class="vv ok" id="o-posm">290</span></div>
+            <div class="vr"><span class="vn">ECF Vol (L)</span><span class="vv ok" id="o-ecf">14</span></div>
+            <div class="vr"><span class="vn">ICF Vol (L)</span><span class="vv ok" id="o-icf">28</span></div>
+            <div class="vr"><span class="vn">Net fluid (mL/h)</span><span class="vv ok" id="o-netfl">0</span></div>
+          </div>
+          <div class="sc">
+            <h4>🌡 THERMOREGULATORY</h4>
+            <div class="vr"><span class="vn">Core Temp (°C)</span><span class="vv ok" id="o-ctemp">37.0</span></div>
+            <div class="vr"><span class="vn">Skin Temp (°C)</span><span class="vv ok" id="o-stemp">33.0</span></div>
+            <div class="vr"><span class="vn">Sweat (mL/h)</span><span class="vv ok" id="o-sweat">40</span></div>
+            <div class="vr"><span class="vn">Heat prod (W)</span><span class="vv ok" id="o-hprod">80</span></div>
+            <div class="vr"><span class="vn">Heat loss (W)</span><span class="vv ok" id="o-hloss">80</span></div>
+            <div class="vr"><span class="vn">Shiver</span><span class="vv ok" id="o-shiver">None</span></div>
+          </div>
         </div>
-        <div class="sys-card">
-          <h4>🫁 RESPIRATORY</h4>
-          <div class="var-row"><span class="vname">RR (br/min)</span><span class="vval" id="o-rr">14</span></div>
-          <div class="var-row"><span class="vname">Tidal Vol (mL)</span><span class="vval" id="o-tv">500</span></div>
-          <div class="var-row"><span class="vname">MV (L/min)</span><span class="vval" id="o-mv">7.0</span></div>
-          <div class="var-row"><span class="vname">PaO₂ (mmHg)</span><span class="vval" id="o-pao2">97</span></div>
-          <div class="var-row"><span class="vname">PaCO₂ (mmHg)</span><span class="vval" id="o-paco2">40</span></div>
-          <div class="var-row"><span class="vname">SaO₂ (%)</span><span class="vval" id="o-sao2">98</span></div>
-          <div class="var-row"><span class="vname">V/Q ratio</span><span class="vval" id="o-vq">0.80</span></div>
-        </div>
-        <div class="sys-card">
-          <h4>⚖ ACID-BASE</h4>
-          <div class="var-row"><span class="vname">pH arterial</span><span class="vval" id="o-ph">7.40</span></div>
-          <div class="var-row"><span class="vname">HCO₃⁻ (mEq/L)</span><span class="vval" id="o-hco3">24</span></div>
-          <div class="var-row"><span class="vname">BE (mEq/L)</span><span class="vval" id="o-be">0</span></div>
-          <div class="var-row"><span class="vname">AG (mEq/L)</span><span class="vval" id="o-ag">12</span></div>
-          <div class="var-row"><span class="vname">Lactate (mmol/L)</span><span class="vval" id="o-lact">1.0</span></div>
-          <div class="var-row"><span class="vname">Status</span><span class="vval" id="o-abstat">Normal</span></div>
-        </div>
-        <div class="sys-card">
-          <h4>🫘 RENAL</h4>
-          <div class="var-row"><span class="vname">GFR (mL/min)</span><span class="vval" id="o-gfr">120</span></div>
-          <div class="var-row"><span class="vname">Urine flow (mL/h)</span><span class="vval" id="o-uflow">60</span></div>
-          <div class="var-row"><span class="vname">UNa (mEq/L)</span><span class="vval" id="o-una">80</span></div>
-          <div class="var-row"><span class="vname">Uosm (mOsm/kg)</span><span class="vval" id="o-uosm">600</span></div>
-          <div class="var-row"><span class="vname">Creatinine (mg/dL)</span><span class="vval" id="o-creat">0.9</span></div>
-          <div class="var-row"><span class="vname">BUN (mg/dL)</span><span class="vval" id="o-bun">15</span></div>
-        </div>
-        <div class="sys-card">
-          <h4>💧 FLUID BALANCE</h4>
-          <div class="var-row"><span class="vname">Plasma Na (mEq/L)</span><span class="vval" id="o-pna">140</span></div>
-          <div class="var-row"><span class="vname">Plasma K (mEq/L)</span><span class="vval" id="o-pk">4.0</span></div>
-          <div class="var-row"><span class="vname">Plasma Osm</span><span class="vval" id="o-posm">290</span></div>
-          <div class="var-row"><span class="vname">ECF Vol (L)</span><span class="vval" id="o-ecf">14</span></div>
-          <div class="var-row"><span class="vname">ICF Vol (L)</span><span class="vval" id="o-icf">28</span></div>
-          <div class="var-row"><span class="vname">Net fluid (mL/h)</span><span class="vval" id="o-netfl">0</span></div>
-        </div>
-        <div class="sys-card">
-          <h4>🌡 THERMOREGULATORY</h4>
-          <div class="var-row"><span class="vname">Core Temp (°C)</span><span class="vval" id="o-ctemp">37.0</span></div>
-          <div class="var-row"><span class="vname">Skin Temp (°C)</span><span class="vval" id="o-stemp">33.0</span></div>
-          <div class="var-row"><span class="vname">Sweat (mL/h)</span><span class="vval" id="o-sweat">40</span></div>
-          <div class="var-row"><span class="vname">Heat prod (W)</span><span class="vval" id="o-hprod">80</span></div>
-          <div class="var-row"><span class="vname">Heat loss (W)</span><span class="vval" id="o-hloss">80</span></div>
-          <div class="var-row"><span class="vname">Shiver</span><span class="vval" id="o-shiver">None</span></div>
-        </div>
-      </div>
 
-      <div class="chart-area">
-        <h4>▶ TIME COURSE — PaO₂ · PaCO₂ · pH · MAP (normalized trend)</h4>
-        <canvas id="trendChart" height="100"></canvas>
-      </div>
+        <div id="chart-wrap">
+          <h4>▶ TIME COURSE — PaO₂ · PaCO₂ · pH · MAP (normalized)</h4>
+          <div id="chart-container">
+            <canvas id="trendChart"></canvas>
+          </div>
+        </div>
 
-      <div class="log-area" id="logArea">
-        <p class="info">HUMAN v4.0 initialized. All systems nominal. Select a preset or adjust parameters.<span class="ticker">_</span></p>
+        <div id="log">
+          <p class="lp li">HUMAN v4.0 inicializado. Todos los sistemas nominales.<span id="cursor" style="animation:blink 1s step-end infinite;color:var(--g4)">_</span></p>
+        </div>
       </div>
     </div>
   </div>
 
-  <div class="status-bar">
-    <span>TIME: <span class="sv" id="st-time">0</span>s</span>
-    <span>STATE: <span class="sv" id="st-state">STEADY-STATE</span></span>
-    <span>ITERATIONS: <span class="sv" id="st-iter">0</span></span>
+  <div id="status">
+    <span>TIME: <span class="sv" id="st-time">0s</span></span>
+    <span>ESTADO: <span class="sv" id="st-state">STEADY-STATE</span></span>
+    <span>ITER: <span class="sv" id="st-iter">0</span></span>
     <span>ΔpH: <span class="sv" id="st-dph">0.00</span></span>
     <span>ΔMAP: <span class="sv" id="st-dmap">0</span> mmHg</span>
   </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<!-- ABOUT MODAL -->
+<div id="modal-overlay" onclick="closeAbout(event)">
+  <div id="modal">
+    <h2>HUMAN v4.0 — PHYSIOLOGICAL SIMULATOR</h2>
+    <p class="author">Dr. José Manuel Fernández Carreira</p>
+    <p style="color:var(--g1);font-size:9px">Servicio de Vigilancia Epidemiológica · Dirección General de Salud Pública<br>Consejería de Salud del Principado de Asturias · España</p>
+    <p style="margin-top:6px;color:var(--g1);font-size:9px">Basado en el modelo FORTRAN original de Tom Coleman &amp; Randall (1978–1984), Universidad de Mississippi Medical Center. Esta es una recreación web educativa del simulador clásico HUMAN.</p>
+
+    <h3>Arquitectura del Modelo</h3>
+    <ul>
+      <li>6 sistemas fisiológicos principales completamente acoplados</li>
+      <li>18 parámetros de entrada ajustables en tiempo real</li>
+      <li>Ecuaciones diferenciales integradas: ecuación alveolar, curva de disociación Hgb (Hill), Henderson-Hasselbalch, Fick, hemodinámica de Poiseuille</li>
+      <li>Código puro JavaScript — sin backend, sin dependencias externas salvo Chart.js</li>
+      <li>Clasificación automática del estado ácido-base (Henderson-Hasselbalch)</li>
+    </ul>
+
+    <h3>Sistemas Simulados</h3>
+    <ul>
+      <li><strong style="color:var(--g3)">Cardiovascular:</strong> FC, PA sistólica/diastólica/media, gasto cardíaco, SVR, PVC</li>
+      <li><strong style="color:var(--g3)">Respiratorio:</strong> FR, volumen corriente, VM, PaO₂, PaCO₂, SaO₂, relación V/Q</li>
+      <li><strong style="color:var(--g3)">Equilibrio ácido-base:</strong> pH, HCO₃⁻, exceso de bases, anión gap, lactato</li>
+      <li><strong style="color:var(--g3)">Renal:</strong> FGR, flujo urinario, Na urinario, Uosm, creatinina, BUN</li>
+      <li><strong style="color:var(--g3)">Balance hídrico:</strong> Na/K plasmático, osmolaridad, volumen ECF/ICF</li>
+      <li><strong style="color:var(--g3)">Termorregulación:</strong> temperatura central/piel, sudoración, producción/pérdida de calor, temblores</li>
+    </ul>
+
+    <h3>Presets Clínicos</h3>
+    <ul>
+      <li>Normal — estado basal adulto 70 kg</li>
+      <li>High Altitude — PB 440 mmHg (~5500 m)</li>
+      <li>Anemia — Hematocrito 18%</li>
+      <li>Emphysema — difusión reducida, atrapamiento aéreo</li>
+      <li>Exercise — ejercicio de resistencia (~5× VO₂ basal)</li>
+      <li>Fever — fiebre por elevación del punto de ajuste</li>
+      <li>Hypertension — hipertensión renal tipo Goldblatt</li>
+      <li>Nephrectomy — insuficiencia renal crónica (50% nefrones)</li>
+      <li>R→L Shunt — cortocircuito derecha-izquierda 30%</li>
+    </ul>
+
+    <h3>Interactividad</h3>
+    <ul>
+      <li>Ajuste en tiempo real con recálculo inmediato (debounce 80 ms)</li>
+      <li>Código de colores: verde (normal) · ámbar (advertencia) · rojo (peligro)</li>
+      <li>Gráfico de tendencias temporal con escala fija normalizada</li>
+      <li>Registro de eventos fisiológicos con alertas automáticas</li>
+      <li>Diseño completamente responsivo: escritorio, tablet y smartphone</li>
+    </ul>
+
+    <h3>Usos Docentes</h3>
+    <ul>
+      <li>Fisiología respiratoria: control de la ventilación, fisiopatología del enfisema</li>
+      <li>Fisiología renal: nefrectomía, regulación del balance hídrico</li>
+      <li>Fisiología cardiovascular: hipertensión, cortocircuitos cardíacos, anemia</li>
+      <li>Termorregulación: respuesta a estrés calórico y frío, fiebre</li>
+    </ul>
+
+    <div class="modal-close">
+      <button class="btn" onclick="closeAbout()">◀ CERRAR</button>
+    </div>
+  </div>
+</div>
+
+<!-- EXIT CONFIRM -->
+<div id="exit-overlay">
+  <div id="exit-box">
+    <p>¿Desea salir del simulador HUMAN v4.0?</p>
+    <div class="ebtns">
+      <button class="btn exit-btn" onclick="doExit()">SALIR</button>
+      <button class="btn" onclick="closeExit()">CANCELAR</button>
+    </div>
+  </div>
+</div>
+
+<style>
+@keyframes blink{50%{opacity:0}}
+</style>
+
 <script>
-const params = {
-  baro:760, atemp:22, humid:50,
-  hr_mult:100, pvr:100, contract:100, bvol:5, shunt:0,
-  fio2:21, diffuse:100, airway:100, metab:100,
-  nephron:100, aldos:100, adh:100, salt:150, water:2000,
-  hct:45, p50:27, setpt:37
+'use strict';
+
+/* ── PARAMETER DEFINITIONS ── */
+const SLIDERS = {
+  baro:{min:400,max:760,val:760,fmt:v=>v},
+  atemp:{min:-10,max:50,val:22,fmt:v=>v},
+  humid:{min:0,max:100,val:50,fmt:v=>v},
+  hr_mult:{min:40,max:200,val:100,fmt:v=>(v/100).toFixed(1)},
+  pvr:{min:20,max:200,val:100,fmt:v=>(v/100).toFixed(1)},
+  contract:{min:20,max:200,val:100,fmt:v=>(v/100).toFixed(1)},
+  bvol:{min:2,max:8,val:5,fmt:v=>parseFloat(v).toFixed(1),step:0.1},
+  shunt:{min:0,max:40,val:0,fmt:v=>v},
+  fio2:{min:10,max:100,val:21,fmt:v=>v},
+  diffuse:{min:10,max:100,val:100,fmt:v=>v},
+  airway:{min:20,max:200,val:100,fmt:v=>(v/100).toFixed(1)},
+  metab:{min:50,max:600,val:100,fmt:v=>v},
+  nephron:{min:10,max:100,val:100,fmt:v=>v},
+  aldos:{min:10,max:500,val:100,fmt:v=>(v/100).toFixed(1)},
+  adh:{min:10,max:500,val:100,fmt:v=>(v/100).toFixed(1)},
+  salt:{min:0,max:400,val:150,fmt:v=>v},
+  water:{min:500,max:5000,val:2000,fmt:v=>v},
+  hct:{min:10,max:65,val:45,fmt:v=>v},
+  p50:{min:15,max:40,val:27,fmt:v=>v},
+  setpt:{min:35,max:41,val:37,fmt:v=>parseFloat(v).toFixed(1),step:0.1}
 };
 
-const sliderDisplayFn = {
-  hr_mult: v => (v/100).toFixed(1),
-  pvr: v => (v/100).toFixed(1),
-  contract: v => (v/100).toFixed(1),
-  aldos: v => (v/100).toFixed(1),
-  adh: v => (v/100).toFixed(1),
-  airway: v => (v/100).toFixed(1),
-  setpt: v => parseFloat(v).toFixed(1),
-  bvol: v => parseFloat(v).toFixed(1)
-};
+const P = {};
+Object.keys(SLIDERS).forEach(k => P[k] = SLIDERS[k].val);
 
-Object.keys(params).forEach(k => {
+/* ── SLIDER INIT ── */
+Object.keys(SLIDERS).forEach(k => {
   const el = document.getElementById(k);
-  if(!el) return;
-  el.value = params[k];
   const vEl = document.getElementById(k+'-v');
-  if(vEl) vEl.textContent = sliderDisplayFn[k] ? sliderDisplayFn[k](params[k]) : params[k];
+  if(!el) return;
+  el.value = SLIDERS[k].val;
+  if(vEl) vEl.textContent = SLIDERS[k].fmt(SLIDERS[k].val);
   el.addEventListener('input', () => {
-    params[k] = parseFloat(el.value);
-    if(vEl) vEl.textContent = sliderDisplayFn[k] ? sliderDisplayFn[k](params[k]) : params[k];
-    computeAndUpdate();
+    P[k] = parseFloat(el.value);
+    if(vEl) vEl.textContent = SLIDERS[k].fmt(el.value);
+    scheduleUpdate();
   });
 });
 
-const trendData = {pao2:[97],paco2:[40],ph:[7.40],map:[93]};
-const maxPts = 40;
+/* ── CHART SETUP (fixed scale, no resize) ── */
+const MAX_PTS = 50;
+const tD = {pao2:[97], paco2:[40], ph:[7.40], map_:[93]};
 let simTime = 0, iterCount = 0;
+let lastPh = 7.40, lastMap = 93;
+
+// Compute fixed canvas size once
+const chartContainer = document.getElementById('chart-container');
+let chartW = 0, chartH = 0;
+
+function initChart() {
+  const cvs = document.getElementById('trendChart');
+  const rect = chartContainer.getBoundingClientRect();
+  chartW = Math.max(300, Math.floor(rect.width));
+  chartH = Math.max(80, Math.floor(rect.height));
+  cvs.width = chartW;
+  cvs.height = chartH;
+  cvs.style.width = chartW + 'px';
+  cvs.style.height = chartH + 'px';
+}
+
+// Debounce resize to avoid RAF violations
+let resizeTimer = null;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(() => {
+    if(chart) {
+      initChart();
+      chart.resize(chartW, chartH);
+    }
+  }, 300);
+});
 
 const ctx = document.getElementById('trendChart').getContext('2d');
+initChart();
+
 const chart = new Chart(ctx, {
-  type:'line',
-  data:{
-    labels:['0'],
-    datasets:[
-      {label:'PaO₂/100',data:[0.97],borderColor:'#00ff00',backgroundColor:'transparent',borderWidth:1.5,pointRadius:0,tension:0.3},
-      {label:'PaCO₂/60',data:[0.67],borderColor:'#ffaa00',backgroundColor:'transparent',borderWidth:1.5,pointRadius:0,tension:0.3,borderDash:[4,2]},
-      {label:'pH-7',data:[0.40],borderColor:'#00aaff',backgroundColor:'transparent',borderWidth:1.5,pointRadius:0,tension:0.3,borderDash:[2,2]},
-      {label:'MAP/150',data:[0.62],borderColor:'#ff4444',backgroundColor:'transparent',borderWidth:1.5,pointRadius:0,tension:0.3,borderDash:[6,2]}
+  type: 'line',
+  data: {
+    labels: ['0s'],
+    datasets: [
+      {label:'PaO₂/100', data:[0.97], borderColor:'#00ff00', backgroundColor:'transparent', borderWidth:1.5, pointRadius:0, tension:0.3},
+      {label:'PaCO₂/60', data:[0.67], borderColor:'#ffaa00', backgroundColor:'transparent', borderWidth:1.5, pointRadius:0, tension:0.3, borderDash:[4,2]},
+      {label:'pH−7',     data:[0.40], borderColor:'#00aaff', backgroundColor:'transparent', borderWidth:1.5, pointRadius:0, tension:0.3, borderDash:[2,2]},
+      {label:'MAP/150',  data:[0.62], borderColor:'#ff4444', backgroundColor:'transparent', borderWidth:1.5, pointRadius:0, tension:0.3, borderDash:[6,2]}
     ]
   },
-  options:{
-    responsive:true, maintainAspectRatio:false,
-    animation:{duration:300},
-    plugins:{legend:{display:true,labels:{color:'#009900',font:{size:9},boxWidth:20}}},
-    scales:{
-      x:{ticks:{color:'#006600',font:{size:9}},grid:{color:'#002200'}},
-      y:{min:0,max:1.5,ticks:{color:'#006600',font:{size:9}},grid:{color:'#002200'}}
+  options: {
+    responsive: false,   /* ← KEY: no auto-resize */
+    animation: {duration: 150},
+    plugins: {
+      legend: {
+        display: true,
+        labels: {color:'#009900', font:{size:9, family:'Courier New'}, boxWidth:18, padding:8}
+      }
+    },
+    scales: {
+      x: {
+        ticks: {color:'#006600', font:{size:8}, maxTicksLimit:10, maxRotation:0},
+        grid: {color:'rgba(0,50,0,0.5)'},
+        border: {color:'#004400'}
+      },
+      y: {
+        min: 0,
+        max: 1.6,   /* ← FIXED max — prevents scale blow-up */
+        ticks: {color:'#006600', font:{size:8}, stepSize:0.2},
+        grid: {color:'rgba(0,50,0,0.5)'},
+        border: {color:'#004400'}
+      }
     }
   }
 });
 
-function clamp(v,lo,hi){return Math.max(lo,Math.min(hi,v))}
+/* ── PHYSIOLOGY MODEL ── */
+function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
 
 function computeModel() {
-  const p = params;
-  const baro_f = p.baro / 760;
-  const metab_f = p.metab / 100;
-  const fio2_f = p.fio2 / 21;
-  const airway_f = p.airway / 100;
-  const diffuse_f = p.diffuse / 100;
-  const nephron_f = p.nephron / 100;
-  const aldos_f = p.aldos / 100;
-  const adh_f = p.adh / 100;
-  const pvr_f = p.pvr / 100;
-  const contract_f = p.contract / 100;
-  const hr_f = p.hr_mult / 100;
+  const baro_f   = P.baro / 760;
+  const metab_f  = P.metab / 100;
+  const fio2_f   = P.fio2 / 21;
+  const airway_f = P.airway / 100;
+  const diffuse_f = P.diffuse / 100;
+  const nephron_f = P.nephron / 100;
+  const aldos_f  = P.aldos / 100;
+  const adh_f    = P.adh / 100;
+  const pvr_f    = P.pvr / 100;
+  const contract_f = P.contract / 100;
+  const hr_f     = P.hr_mult / 100;
 
-  // Alveolar PO2 (simplified alveolar gas equation)
-  const piO2 = (p.baro - 47) * (p.fio2/100);
-  const alv_co2 = 40 * (1 / Math.max(0.1, baro_f * metab_f * (1/airway_f)));
-  const pAO2 = piO2 - (alv_co2 / 0.8);
-
-  // CO2 production & respiratory drive
-  const vco2 = 200 * metab_f;
+  // Alveolar gas equation
+  const piO2  = (P.baro - 47) * (P.fio2 / 100);
+  const alv_co2 = clamp(40 * metab_f / Math.max(0.1, baro_f / airway_f), 10, 100);
+  const pAO2  = piO2 - alv_co2 / 0.8;
   const paco2 = clamp(alv_co2, 15, 90);
-  const resp_drive = 1 + 0.4*(paco2-40)/10 + 0.3*Math.max(0,7.4-(7.4-0.003*(paco2-40)));
-  const rr = clamp(Math.round(14 * resp_drive / airway_f), 8, 50);
-  const tv_ml = clamp(Math.round(500 * Math.min(1.5, 1/Math.max(0.5,airway_f)) * resp_drive), 300, 1200);
-  const mv = parseFloat((rr * tv_ml / 1000).toFixed(1));
 
-  // PaO2 via diffusion & shunt
-  const shunt_f = p.shunt / 100;
-  const pao2_no_shunt = clamp(pAO2 * diffuse_f * fio2_f * baro_f - paco2*0.3, 20, 600);
-  const pao2 = clamp(pao2_no_shunt * (1 - shunt_f) + 40 * shunt_f, 15, 600);
+  // Ventilatory drive
+  const resp_drive = clamp(1 + 0.4*(paco2-40)/10, 0.6, 4);
+  const rr    = clamp(Math.round(14 * resp_drive / Math.max(0.5, airway_f)), 8, 55);
+  const tv_ml = clamp(Math.round(500 * Math.min(1.5, 1/Math.max(0.5, airway_f)) * resp_drive), 200, 1400);
+  const mv    = parseFloat((rr * tv_ml / 1000).toFixed(1));
 
-  // O2 saturation (Hill eq, P50 correction)
-  const p50_f = p.p50;
-  const sao2 = clamp(Math.round(100 * Math.pow(pao2,2.7) / (Math.pow(pao2,2.7) + Math.pow(p50_f,2.7))), 40, 100);
+  // PaO2 (diffusion + shunt)
+  const shunt_f = P.shunt / 100;
+  const pao2_raw = clamp(pAO2 * diffuse_f * fio2_f * baro_f - paco2*0.3, 15, 700);
+  const pao2    = clamp(pao2_raw*(1-shunt_f) + 40*shunt_f, 15, 700);
 
-  // O2 delivery
-  const hgb = p.hct * 0.34;
-  const cao2 = (1.34 * hgb * sao2/100 + 0.003*pao2);
+  // O2 saturation (Hill eq)
+  const sao2 = clamp(Math.round(100*Math.pow(pao2,2.7)/(Math.pow(pao2,2.7)+Math.pow(P.p50,2.7))), 40, 100);
 
-  // HR and cardiac output
-  const hr_resp = Math.round(72 * hr_f * metab_f * (1 + 0.3*Math.max(0,(40-pao2)/20)));
-  const hr = clamp(hr_resp, 40, 180);
-  const sv_ml = clamp(70 * contract_f * (p.bvol/5) / pvr_f * 0.8, 20, 150);
-  const co = parseFloat((hr * sv_ml / 1000).toFixed(2));
+  // Haemodynamics
+  const hr   = clamp(Math.round(72 * hr_f * metab_f * (1 + 0.25*Math.max(0,(40-pao2)/30))), 40, 180);
+  const sv   = clamp(70 * contract_f * (P.bvol/5) / pvr_f * 0.8, 20, 180);
+  const co   = parseFloat((hr * sv / 1000).toFixed(2));
+  const svr  = clamp(Math.round(80 * pvr_f * 1200 / Math.max(0.4, co/5)), 300, 3500);
+  const map_ = clamp(Math.round(co * svr / 80), 30, 200);
+  const pp   = clamp(Math.round(sv * 0.5 * pvr_f), 10, 120);
+  const sbp  = clamp(map_ + Math.round(pp*0.67), 50, 280);
+  const dbp  = clamp(map_ - Math.round(pp*0.33), 30, 150);
+  const cvp  = clamp(Math.round(5 + (P.bvol-5)*2 - co*0.3 + pvr_f*0.3), 0, 25);
+  const vq   = parseFloat(clamp(mv/(co*10), 0.05, 3).toFixed(2));
 
-  // Blood pressure
-  const svr = clamp(Math.round(80 * pvr_f * 1200 / Math.max(0.5,co/5)), 400, 3000);
-  const map_val = Math.round(co * svr / 80);
-  const pp = Math.round(sv_ml * 0.5 * pvr_f);
-  const sbp = Math.round(map_val + pp*0.67);
-  const dbp = Math.round(map_val - pp*0.33);
-  const cvp = clamp(Math.round(5 + (p.bvol-5)*2 - co*0.5 + pvr_f*0.5), 0, 20);
-
-  // Acid-base
-  const hco3_renal = clamp(24 * (1 + 0.3*(paco2-40)/10) * nephron_f, 8, 38);
-  const ph_val = parseFloat((6.1 + Math.log10(hco3_renal / (0.0307 * paco2))).toFixed(2));
-  const be = parseFloat((hco3_renal - 24 + (ph_val - 7.4)*10).toFixed(1));
-  const lactate = parseFloat((metab_f > 3 ? 1.0 + (metab_f-3)*2 : 1.0).toFixed(1));
-  const ag = parseFloat((12 + lactate - 1).toFixed(1));
-
+  // Acid-base (Henderson-Hasselbalch)
+  const hco3 = clamp(24*(1+0.3*(paco2-40)/10)*nephron_f, 8, 40);
+  const ph   = parseFloat(clamp(6.1 + Math.log10(hco3/(0.0307*paco2)), 6.8, 7.8).toFixed(2));
+  const be   = parseFloat((hco3 - 24 + (ph-7.4)*10).toFixed(1));
+  const lactate = parseFloat((metab_f > 3 ? 1.0+(metab_f-3)*2 : 1.0).toFixed(1));
+  const ag   = parseFloat((12 + Math.max(0,lactate-1)).toFixed(1));
   let abstat = 'Normal';
-  if(ph_val < 7.35 && paco2 > 45) abstat = 'Resp. Acidosis';
-  else if(ph_val < 7.35 && hco3_renal < 22) abstat = 'Met. Acidosis';
-  else if(ph_val > 7.45 && paco2 < 35) abstat = 'Resp. Alkalosis';
-  else if(ph_val > 7.45 && hco3_renal > 26) abstat = 'Met. Alkalosis';
-  else if(ph_val < 7.35) abstat = 'Acidosis';
-  else if(ph_val > 7.45) abstat = 'Alkalosis';
+  if(ph<7.35 && paco2>45) abstat='Resp.Acidosis';
+  else if(ph<7.35 && hco3<22) abstat='Met.Acidosis';
+  else if(ph>7.45 && paco2<35) abstat='Resp.Alkalosis';
+  else if(ph>7.45 && hco3>26) abstat='Met.Alkalosis';
+  else if(ph<7.35) abstat='Acidosis';
+  else if(ph>7.45) abstat='Alkalosis';
 
   // Renal
-  const gfr = clamp(Math.round(120 * nephron_f * map_val/93), 5, 180);
-  const urine_flow = clamp(Math.round(gfr * 0.5 * (1/Math.max(0.2,adh_f)) * (p.water/2000)), 10, 500);
-  const una = clamp(Math.round(80 / aldos_f * (p.salt/150)), 5, 200);
-  const uosm = clamp(Math.round(600 * adh_f), 60, 1200);
-  const creat = parseFloat(clamp(0.9 / nephron_f, 0.6, 15).toFixed(1));
-  const bun = parseFloat(clamp(15 / nephron_f * metab_f * 0.7, 5, 100).toFixed(0));
+  const gfr   = clamp(Math.round(120*nephron_f*map_/93), 5, 200);
+  const uflow = clamp(Math.round(gfr*0.5*(1/Math.max(0.2,adh_f))*(P.water/2000)), 5, 600);
+  const una   = clamp(Math.round(80/aldos_f*(P.salt/150)), 5, 250);
+  const uosm  = clamp(Math.round(600*adh_f), 50, 1400);
+  const creat = parseFloat(clamp(0.9/nephron_f, 0.5, 18).toFixed(1));
+  const bun   = parseFloat(clamp(15/nephron_f*metab_f*0.7, 5, 120).toFixed(0));
 
   // Fluid balance
-  const p_na = clamp(Math.round(140 * (1 + 0.02*(1-adh_f)) * (1 + 0.01*(p.salt-150)/150)), 125, 160);
-  const p_k = parseFloat(clamp(4.0 * (1/Math.max(0.3,aldos_f)) + 0.5, 2.5, 7.0).toFixed(1));
-  const p_osm = Math.round(2*p_na + gfr/10 + 5);
-  const ecf = parseFloat(clamp(14 * (p.bvol/5) * adh_f * 0.5 + 7, 8, 22).toFixed(1));
-  const icf = parseFloat((42 - ecf - p.bvol).toFixed(1));
-  const net_fl = Math.round(p.water/24 - urine_flow - p.metab*0.01);
+  const p_na  = clamp(Math.round(140*(1+0.02*(1-adh_f))*(1+0.01*(P.salt-150)/150)), 120, 165);
+  const p_k   = parseFloat(clamp(4.0*(1/Math.max(0.3,aldos_f))+0.5, 2.5, 7.5).toFixed(1));
+  const p_osm = clamp(Math.round(2*p_na + gfr/10 + 5), 250, 340);
+  const ecf   = parseFloat(clamp(14*(P.bvol/5)*adh_f*0.5+7, 7, 25).toFixed(1));
+  const icf   = parseFloat(Math.max(0, 42-ecf-P.bvol).toFixed(1));
+  const netfl = Math.round(P.water/24 - uflow - P.metab*0.01);
 
   // Thermoregulation
-  const amb_diff = p.atemp - p.setpt;
-  const heat_prod = Math.round(80 * metab_f);
-  const sweat_rate = clamp(Math.round(40 + Math.max(0,(p.setpt - 37)*200) + Math.max(0,p.atemp-30)*30), 0, 2000);
-  const core_temp = parseFloat(clamp(p.setpt + 0.2*(heat_prod - 80)/80 + (p.atemp > 35 ? (p.atemp-35)*0.1 : 0), 34, 42).toFixed(1));
-  const skin_temp = parseFloat(clamp(33 + (p.atemp-22)*0.3 + (heat_prod-80)*0.02, 20, 40).toFixed(1));
-  const heat_loss = Math.round(heat_prod + (core_temp - 37)*10);
-  const shiver = core_temp < 36 ? (core_temp < 35 ? 'Severe' : 'Mild') : 'None';
+  const heat_prod = Math.round(80*metab_f);
+  const sweat     = clamp(Math.round(40+Math.max(0,(P.setpt-37)*200)+Math.max(0,P.atemp-30)*30), 0, 2500);
+  const core_temp = parseFloat(clamp(P.setpt+0.15*(heat_prod-80)/80+(P.atemp>35?(P.atemp-35)*0.1:0), 33, 43).toFixed(1));
+  const skin_temp = parseFloat(clamp(33+(P.atemp-22)*0.3+(heat_prod-80)*0.02, 18, 42).toFixed(1));
+  const heat_loss = Math.round(heat_prod + (core_temp-37)*8);
+  const shiver    = core_temp<36?(core_temp<35?'Severe':'Mild'):'None';
 
-  return {hr, sbp, dbp, map:map_val, co, svr, cvp, rr, tv_ml, mv, pao2:Math.round(pao2),
-    paco2:Math.round(paco2), sao2, vq:parseFloat((mv/(co*10)).toFixed(2)), ph_val, hco3_renal:Math.round(hco3_renal),
-    be, ag, lactate, abstat, gfr, urine_flow, una, uosm, creat, bun, p_na, p_k, p_osm,
-    ecf, icf, net_fl, core_temp, skin_temp, sweat_rate, heat_prod, heat_loss, shiver};
+  return {hr,sbp,dbp,map_,co,svr,cvp,rr,tv_ml,mv,
+          pao2:Math.round(pao2),paco2:Math.round(paco2),sao2,vq,
+          ph,hco3:Math.round(hco3),be,ag,lactate,abstat,
+          gfr,uflow,una,uosm,creat,bun,
+          p_na,p_k,p_osm,ecf,icf,netfl,
+          core_temp,skin_temp,sweat,heat_prod,heat_loss,shiver};
 }
 
-function colorVal(v, lo_warn, lo_danger, hi_warn, hi_danger) {
-  if(v <= lo_danger || v >= hi_danger) return 'danger';
-  if(v <= lo_warn || v >= hi_warn) return 'warning';
-  return 'normal';
+/* ── DOM HELPERS ── */
+function cls(v,lo_w,lo_d,hi_w,hi_d) {
+  if(v<=lo_d||v>=hi_d) return 'vv bad';
+  if(v<=lo_w||v>=hi_w) return 'vv warn';
+  return 'vv ok';
 }
-
-function setVal(id, v, cls) {
+function sv(id,val,c) {
   const el = document.getElementById('o-'+id);
   if(!el) return;
-  el.textContent = v;
-  el.className = 'vval ' + (cls || 'normal');
+  el.textContent = val;
+  el.className = c||'vv ok';
 }
 
-let lastMap = 93, lastPh = 7.40;
+/* ── UPDATE DOM (called once per RAF frame) ── */
+function updateDOM(m) {
+  sv('hr',  m.hr,    cls(m.hr,   60,40, 100,130));
+  sv('sbp', m.sbp,   cls(m.sbp,  90,70, 140,185));
+  sv('dbp', m.dbp,   cls(m.dbp,  60,50, 90,115));
+  sv('map', m.map_,  cls(m.map_, 65,50, 100,130));
+  sv('co',  m.co.toFixed(2), cls(m.co, 3.5,2.5, 7,10));
+  sv('svr', m.svr,   cls(m.svr,  800,400, 1600,2600));
+  sv('cvp', m.cvp,   cls(m.cvp,  3,0, 10,18));
 
-function computeAndUpdate() {
-  const m = computeModel();
-  simTime += 10; iterCount++;
+  sv('rr',  m.rr,    cls(m.rr,   12,8, 20,30));
+  sv('tv',  m.tv_ml, cls(m.tv_ml,400,280,700,1100));
+  sv('mv',  m.mv.toFixed(1), cls(m.mv,5,3,10,18));
+  sv('pao2', m.pao2, cls(m.pao2, 60,45,100,250));
+  sv('paco2',m.paco2,cls(m.paco2,35,20,45,65));
+  sv('sao2', m.sao2, cls(m.sao2, 90,80,100,101));
+  sv('vq',   m.vq.toFixed(2), cls(m.vq,0.6,0.3,1.0,1.6));
 
-  setVal('hr', m.hr, colorVal(m.hr, 60, 40, 100, 130));
-  setVal('sbp', m.sbp, colorVal(m.sbp, 90, 70, 140, 180));
-  setVal('dbp', m.dbp, colorVal(m.dbp, 60, 50, 90, 110));
-  setVal('map', m.map, colorVal(m.map, 65, 50, 100, 130));
-  setVal('co', m.co.toFixed(2), colorVal(m.co, 3.5, 2.5, 7, 10));
-  setVal('svr', m.svr, colorVal(m.svr, 800, 400, 1600, 2500));
-  setVal('cvp', m.cvp, colorVal(m.cvp, 3, 0, 10, 15));
+  sv('ph',   m.ph.toFixed(2),  cls(m.ph,  7.35,7.2, 7.45,7.60));
+  sv('hco3', m.hco3,           cls(m.hco3,18,12, 26,34));
+  sv('be',   m.be.toFixed(1),  cls(m.be,  -3,-8, 3,8));
+  sv('ag',   m.ag.toFixed(1),  cls(m.ag,  8,5, 14,20));
+  sv('lact', m.lactate.toFixed(1), cls(m.lactate,0,0,2,4));
+  const abEl = document.getElementById('o-abstat');
+  if(abEl){abEl.textContent=m.abstat;abEl.className='vv '+(m.abstat==='Normal'?'ok':'warn')}
 
-  setVal('rr', m.rr, colorVal(m.rr, 12, 8, 20, 30));
-  setVal('tv', m.tv_ml, colorVal(m.tv_ml, 400, 300, 700, 1000));
-  setVal('mv', m.mv.toFixed(1), colorVal(m.mv, 5, 3, 10, 18));
-  setVal('pao2', m.pao2, colorVal(m.pao2, 60, 45, 100, 200));
-  setVal('paco2', m.paco2, colorVal(m.paco2, 35, 20, 45, 65));
-  setVal('sao2', m.sao2, colorVal(m.sao2, 90, 80, 100, 101));
-  setVal('vq', m.vq.toFixed(2), colorVal(m.vq, 0.6, 0.3, 1.0, 1.5));
+  sv('gfr',   m.gfr,  cls(m.gfr,   60,30,140,180));
+  sv('uflow', m.uflow,cls(m.uflow,  20,5,200,450));
+  sv('una',   m.una,  'vv ok');
+  sv('uosm',  m.uosm, 'vv ok');
+  sv('creat', m.creat.toFixed(1), cls(m.creat,0,0,1.2,3.5));
+  sv('bun',   m.bun,  cls(m.bun,   0,0,20,45));
 
-  setVal('ph', m.ph_val.toFixed(2), colorVal(m.ph_val, 7.35, 7.20, 7.45, 7.60));
-  setVal('hco3', m.hco3_renal, colorVal(m.hco3_renal, 18, 12, 26, 32));
-  setVal('be', m.be.toFixed(1), colorVal(m.be, -3, -8, 3, 8));
-  setVal('ag', m.ag.toFixed(1), colorVal(m.ag, 8, 5, 14, 20));
-  setVal('lact', m.lactate.toFixed(1), colorVal(m.lactate, 0, 0, 2, 4));
-  const abstatEl = document.getElementById('o-abstat');
-  if(abstatEl){abstatEl.textContent=m.abstat; abstatEl.className='vval '+(m.abstat==='Normal'?'normal':'warning')}
+  sv('pna',  m.p_na,  cls(m.p_na, 135,125,145,155));
+  sv('pk',   m.p_k.toFixed(1), cls(m.p_k,3.5,3.0,5.0,6.2));
+  sv('posm', m.p_osm, cls(m.p_osm,275,260,295,310));
+  sv('ecf',  m.ecf.toFixed(1), 'vv ok');
+  sv('icf',  m.icf.toFixed(1), 'vv ok');
+  sv('netfl',m.netfl, m.netfl<-150?'vv bad':m.netfl>150?'vv warn':'vv ok');
 
-  setVal('gfr', m.gfr, colorVal(m.gfr, 60, 30, 140, 180));
-  setVal('uflow', m.urine_flow, colorVal(m.urine_flow, 30, 10, 200, 400));
-  setVal('una', m.una, 'normal');
-  setVal('uosm', m.uosm, 'normal');
-  setVal('creat', m.creat.toFixed(1), colorVal(m.creat, 0, 0, 1.2, 3));
-  setVal('bun', m.bun, colorVal(m.bun, 0, 0, 20, 40));
+  sv('ctemp',m.core_temp.toFixed(1), cls(m.core_temp,36,35,38,40));
+  sv('stemp',m.skin_temp.toFixed(1), 'vv ok');
+  sv('sweat',m.sweat, cls(m.sweat,0,0,800,1600));
+  sv('hprod',m.heat_prod,'vv ok');
+  sv('hloss',m.heat_loss,'vv ok');
+  sv('shiver',m.shiver, m.shiver==='None'?'vv ok':m.shiver==='Mild'?'vv warn':'vv bad');
 
-  setVal('pna', m.p_na, colorVal(m.p_na, 135, 125, 145, 155));
-  setVal('pk', m.p_k.toFixed(1), colorVal(m.p_k, 3.5, 3.0, 5.0, 6.0));
-  setVal('posm', m.p_osm, colorVal(m.p_osm, 275, 260, 295, 310));
-  setVal('ecf', m.ecf.toFixed(1), 'normal');
-  setVal('icf', Math.max(0,m.icf).toFixed(1), 'normal');
-  setVal('netfl', m.net_fl, m.net_fl < -100 ? 'danger' : m.net_fl > 100 ? 'warning' : 'normal');
-
-  setVal('ctemp', m.core_temp.toFixed(1), colorVal(m.core_temp, 36, 35, 38, 40));
-  setVal('stemp', m.skin_temp.toFixed(1), 'normal');
-  setVal('sweat', m.sweat_rate, colorVal(m.sweat_rate, 0, 0, 800, 1500));
-  setVal('hprod', m.heat_prod, 'normal');
-  setVal('hloss', m.heat_loss, 'normal');
-  setVal('shiver', m.shiver, m.shiver==='None'?'normal':m.shiver==='Mild'?'warning':'danger');
-
-  document.getElementById('st-time').textContent = simTime + 's';
+  // Status bar
+  document.getElementById('st-time').textContent = simTime+'s';
   document.getElementById('st-iter').textContent = iterCount;
-  document.getElementById('st-dph').textContent = (m.ph_val - lastPh).toFixed(2);
-  document.getElementById('st-dmap').textContent = (m.map - lastMap);
-  lastPh = m.ph_val; lastMap = m.map;
-
-  trendData.pao2.push(m.pao2); trendData.paco2.push(m.paco2); trendData.ph.push(m.ph_val); trendData.map.push(m.map);
-  ['pao2','paco2','ph','map'].forEach(k=>{if(trendData[k].length>maxPts)trendData[k].shift()});
-
-  chart.data.labels = trendData.pao2.map((_,i)=>((simTime-(trendData.pao2.length-1-i)*10)+'s'));
-  chart.data.datasets[0].data = trendData.pao2.map(v=>v/100);
-  chart.data.datasets[1].data = trendData.paco2.map(v=>v/60);
-  chart.data.datasets[2].data = trendData.ph.map(v=>v-7);
-  chart.data.datasets[3].data = trendData.map.map(v=>v/150);
-  chart.update();
-
-  if(m.sao2 < 85) logMsg('⚠ HYPOXIA: SaO₂ '+m.sao2+'%', 'warn');
-  if(m.ph_val < 7.25 || m.ph_val > 7.55) logMsg('⚠ SEVERE '+m.abstat+': pH '+m.ph_val.toFixed(2), 'warn');
-  if(m.map < 60) logMsg('⚠ HYPOTENSION: MAP '+m.map+' mmHg', 'warn');
-  if(m.gfr < 30) logMsg('⚠ RENAL FAILURE: GFR '+m.gfr+' mL/min', 'warn');
-  if(m.core_temp > 39) logMsg('⚠ HYPERTHERMIA: '+m.core_temp+'°C', 'warn');
+  document.getElementById('st-dph').textContent  = (m.ph-lastPh).toFixed(2);
+  document.getElementById('st-dmap').textContent = (m.map_-lastMap);
+  lastPh = m.ph; lastMap = m.map_;
 }
 
+/* ── CHART UPDATE (lightweight, no layout recalc) ── */
+function updateChart(m) {
+  tD.pao2.push(m.pao2); tD.paco2.push(m.paco2);
+  tD.ph.push(m.ph);     tD.map_.push(m.map_);
+  const keep = MAX_PTS;
+  ['pao2','paco2','ph','map_'].forEach(k=>{ if(tD[k].length>keep) tD[k].shift(); });
+
+  // Clamp normalized values to [0, 1.55] to stay within fixed y-axis
+  chart.data.labels = tD.pao2.map((_,i)=>i===0||i===tD.pao2.length-1?(simTime-(tD.pao2.length-1-i)*10)+'s':'');
+  chart.data.datasets[0].data = tD.pao2.map(v=>Math.min(1.55, v/100));
+  chart.data.datasets[1].data = tD.paco2.map(v=>Math.min(1.55, v/60));
+  chart.data.datasets[2].data = tD.ph.map(v=>Math.min(1.55, v-7));
+  chart.data.datasets[3].data = tD.map_.map(v=>Math.min(1.55, v/150));
+  chart.update('none');  /* ← 'none' skips animation for max perf */
+}
+
+/* ── LOG ── */
 function logMsg(msg, cls) {
-  const log = document.getElementById('logArea');
+  const log = document.getElementById('log');
   const p = document.createElement('p');
-  p.className = cls || 'info';
-  p.textContent = '[t='+simTime+'s] ' + msg;
+  p.className = 'lp '+(cls||'li');
+  p.textContent = '['+simTime+'s] '+msg;
   log.appendChild(p);
-  if(log.children.length > 8) log.removeChild(log.children[0]);
+  while(log.children.length > 10) log.removeChild(log.children[0]);
   log.scrollTop = log.scrollHeight;
 }
 
-const presets = {
-  normal:{baro:760,atemp:22,humid:50,hr_mult:100,pvr:100,contract:100,bvol:5,shunt:0,fio2:21,diffuse:100,airway:100,metab:100,nephron:100,aldos:100,adh:100,salt:150,water:2000,hct:45,p50:27,setpt:37},
-  altitude:{baro:440,atemp:5,humid:30,hr_mult:115,pvr:90,contract:105,bvol:5,shunt:0,fio2:21,diffuse:100,airway:100,metab:110,nephron:100,aldos:100,adh:120,salt:150,water:2000,hct:45,p50:27,setpt:37},
-  anemia:{baro:760,atemp:22,humid:50,hr_mult:130,pvr:70,contract:110,bvol:5,shunt:0,fio2:21,diffuse:100,airway:100,metab:100,nephron:100,aldos:100,adh:100,salt:150,water:2000,hct:18,p50:27,setpt:37},
-  emphysema:{baro:760,atemp:22,humid:50,hr_mult:100,pvr:130,contract:100,bvol:5,shunt:10,fio2:21,diffuse:35,airway:160,metab:100,nephron:100,aldos:100,adh:100,salt:150,water:2000,hct:52,p50:27,setpt:37},
-  exercise:{baro:760,atemp:22,humid:50,hr_mult:180,pvr:60,contract:180,bvol:5,shunt:0,fio2:21,diffuse:100,airway:100,metab:500,nephron:100,aldos:120,adh:120,salt:150,water:3000,hct:45,p50:30,setpt:37},
-  fever:{baro:760,atemp:22,humid:50,hr_mult:130,pvr:70,contract:110,bvol:5,shunt:0,fio2:21,diffuse:100,airway:100,metab:150,nephron:100,aldos:100,adh:130,salt:150,water:2500,hct:45,p50:27,setpt:39.5},
+function checkAlerts(m) {
+  if(m.sao2 < 85)     logMsg('⚠ HIPOXIA: SaO₂ '+m.sao2+'%', 'lw');
+  if(m.ph<7.25||m.ph>7.55) logMsg('⚠ '+m.abstat+' GRAVE: pH '+m.ph.toFixed(2),'le');
+  if(m.map_<55)       logMsg('⚠ HIPOTENSIÓN: MAP '+m.map_+' mmHg','le');
+  if(m.gfr<25)        logMsg('⚠ INSUF. RENAL: GFR '+m.gfr+' mL/min','le');
+  if(m.core_temp>39.5) logMsg('⚠ HIPERTERMIA: '+m.core_temp+'°C','lw');
+  if(m.core_temp<35)  logMsg('⚠ HIPOTERMIA: '+m.core_temp+'°C','lw');
+}
+
+/* ── SCHEDULER: debounce + RAF (avoids rAF violations) ── */
+let pending = false, debounceTimer = null;
+let alertTimer = 0;
+
+function scheduleUpdate() {
+  clearTimeout(debounceTimer);
+  debounceTimer = setTimeout(() => {
+    if(pending) return;
+    pending = true;
+    requestAnimationFrame(() => {
+      const m = computeModel();
+      simTime += 10; iterCount++;
+      document.getElementById('st-state').textContent = 'COMPUTING';
+      updateDOM(m);
+      updateChart(m);
+      alertTimer++;
+      if(alertTimer % 3 === 0) checkAlerts(m);
+      document.getElementById('st-state').textContent = 'STEADY-STATE';
+      pending = false;
+    });
+  }, 80);
+}
+
+/* ── PRESETS ── */
+const PRESETS = {
+  normal:      {baro:760,atemp:22,humid:50,hr_mult:100,pvr:100,contract:100,bvol:5,shunt:0,fio2:21,diffuse:100,airway:100,metab:100,nephron:100,aldos:100,adh:100,salt:150,water:2000,hct:45,p50:27,setpt:37},
+  altitude:    {baro:440,atemp:5, humid:30,hr_mult:115,pvr:90, contract:105,bvol:5,shunt:0,fio2:21,diffuse:100,airway:100,metab:110,nephron:100,aldos:100,adh:120,salt:150,water:2000,hct:45,p50:27,setpt:37},
+  anemia:      {baro:760,atemp:22,humid:50,hr_mult:130,pvr:70, contract:110,bvol:5,shunt:0,fio2:21,diffuse:100,airway:100,metab:100,nephron:100,aldos:100,adh:100,salt:150,water:2000,hct:18,p50:27,setpt:37},
+  emphysema:   {baro:760,atemp:22,humid:50,hr_mult:100,pvr:130,contract:100,bvol:5,shunt:10,fio2:21,diffuse:35, airway:160,metab:100,nephron:100,aldos:100,adh:100,salt:150,water:2000,hct:52,p50:27,setpt:37},
+  exercise:    {baro:760,atemp:22,humid:60,hr_mult:180,pvr:60, contract:180,bvol:5,shunt:0,fio2:21,diffuse:100,airway:100,metab:500,nephron:100,aldos:120,adh:120,salt:150,water:3000,hct:45,p50:30,setpt:37},
+  fever:       {baro:760,atemp:22,humid:50,hr_mult:130,pvr:70, contract:110,bvol:5,shunt:0,fio2:21,diffuse:100,airway:100,metab:150,nephron:100,aldos:100,adh:130,salt:150,water:2500,hct:45,p50:27,setpt:39.5},
   hypertension:{baro:760,atemp:22,humid:50,hr_mult:100,pvr:180,contract:100,bvol:5.5,shunt:0,fio2:21,diffuse:100,airway:100,metab:100,nephron:70,aldos:200,adh:100,salt:250,water:2000,hct:45,p50:27,setpt:37},
-  nephrectomy:{baro:760,atemp:22,humid:50,hr_mult:100,pvr:110,contract:100,bvol:5,shunt:0,fio2:21,diffuse:100,airway:100,metab:100,nephron:50,aldos:110,adh:120,salt:150,water:2000,hct:38,p50:27,setpt:37},
-  shunt:{baro:760,atemp:22,humid:50,hr_mult:110,pvr:80,contract:110,bvol:5,shunt:30,fio2:21,diffuse:100,airway:100,metab:100,nephron:100,aldos:100,adh:100,salt:150,water:2000,hct:45,p50:27,setpt:37}
+  nephrectomy: {baro:760,atemp:22,humid:50,hr_mult:100,pvr:110,contract:100,bvol:5,shunt:0,fio2:21,diffuse:100,airway:100,metab:100,nephron:50,aldos:110,adh:120,salt:150,water:2000,hct:38,p50:27,setpt:37},
+  shunt:       {baro:760,atemp:22,humid:50,hr_mult:110,pvr:80, contract:110,bvol:5,shunt:30,fio2:21,diffuse:100,airway:100,metab:100,nephron:100,aldos:100,adh:100,salt:150,water:2000,hct:45,p50:27,setpt:37}
 };
 
-const presetNames = {
-  normal:'Normal baseline (70 kg adult)',
-  altitude:'High altitude — PB 440 mmHg (~5500m)',
-  anemia:'Progressive anemia — Hct 18%',
-  emphysema:'Emphysema — reduced diffusion, air-trapping',
-  exercise:'Endurance exercise — VO₂ ~5×',
-  fever:'Fever induction — Tsetpoint 39.5°C',
-  hypertension:'Renal hypertension (Goldblatt) — high PVR + Na retention',
-  nephrectomy:'50% nephrectomy — chronic renal insufficiency',
-  shunt:'Right-to-left shunt 30% — cyanotic physiology'
+const PRESET_LABELS = {
+  normal:'Baseline normal (adulto 70 kg)',
+  altitude:'Alta altitud — PB 440 mmHg (~5500 m)',
+  anemia:'Anemia progresiva — Hct 18%',
+  emphysema:'Enfisema — difusión reducida + atrapamiento',
+  exercise:'Ejercicio extenuante — VO₂ ~5×',
+  fever:'Fiebre — elevación setpoint 39.5°C',
+  hypertension:'Hipertensión renal (Goldblatt)',
+  nephrectomy:'Nefrectomía — insuficiencia renal crónica',
+  shunt:'Cortocircuito D→I 30% — fisiología cianótica'
 };
 
 function applyPreset(name) {
-  const pre = presets[name];
+  const pre = PRESETS[name];
   if(!pre) return;
-  Object.keys(pre).forEach(k=>{
-    params[k] = pre[k];
+  Object.keys(pre).forEach(k => {
+    P[k] = pre[k];
     const el = document.getElementById(k);
-    if(el) el.value = pre[k];
+    if(el){ el.value = pre[k]; }
     const vEl = document.getElementById(k+'-v');
-    if(vEl) vEl.textContent = sliderDisplayFn[k] ? sliderDisplayFn[k](pre[k]) : pre[k];
+    if(vEl && SLIDERS[k]) vEl.textContent = SLIDERS[k].fmt(pre[k]);
   });
-  logMsg('Preset loaded: ' + presetNames[name], 'info');
-  computeAndUpdate();
+  // Reset trend
+  Object.keys(tD).forEach(k=>{ tD[k]=[tD[k][tD[k].length-1]]; });
+  logMsg('Preset: '+PRESET_LABELS[name], 'li');
+  scheduleUpdate();
 }
 
-computeAndUpdate();
+/* ── MODAL ── */
+function openAbout() { document.getElementById('modal-overlay').classList.add('open'); }
+function closeAbout(e) {
+  if(!e || e.target===document.getElementById('modal-overlay'))
+    document.getElementById('modal-overlay').classList.remove('open');
+}
+function openExit()  { document.getElementById('exit-overlay').classList.add('open'); }
+function closeExit() { document.getElementById('exit-overlay').classList.remove('open'); }
+function doExit()    { window.close(); if(!window.closed) document.getElementById('app').innerHTML='<div style="display:flex;align-items:center;justify-content:center;height:100vh;color:#009900;font-family:monospace;font-size:14px">HUMAN v4.0 — SESIÓN FINALIZADA</div>'; }
 
-setInterval(() => {
-  simTime += 10; iterCount++;
-  document.getElementById('st-time').textContent = simTime+'s';
-  document.getElementById('st-state').textContent = 'RUNNING';
-  document.getElementById('st-iter').textContent = iterCount;
-  setTimeout(()=>document.getElementById('st-state').textContent='STEADY-STATE', 800);
-}, 8000);
+/* ── INIT ── */
+(function init() {
+  const m = computeModel();
+  updateDOM(m);
+  updateChart(m);
+  logMsg('HUMAN v4.0 inicializado. Seleccione un preset o ajuste los parámetros.', 'li');
+})();
 </script>
+</body>
+</html>
